@@ -106,7 +106,31 @@ async function submitNewStory(evt) {
 
 $storySubmitForm.on('submit', submitNewStory);
 
- // toggle function will use the the User add/remove Favorite methods to update the API/data (send the story/id to the methods)
+/* Removes a user's story. 
+- sends delete request to API
+- removes the story from the stories, ownStories and favorites [] in local memory.
+- updates list of stories on page from API
+*/
+async function removeUserStory(evt) {
+  const storyId = evt.target.closest('li').id;
+  console.log(storyId);
+
+  //remove the story
+  await storyList.removeStory(currentUser, storyId);
+
+  //show updated stories
+  hidePageComponents();
+  putStoriesOnPage();
+}
+
+$storiesList.on('click', '.fa-trash-alt', removeUserStory);
+
+// toggle function will use the the User add/remove Favorite methods to update the API/data (send the story/id to the methods)
+/* Toggles the user's favorite stories. 
+- Uses the the User Add/Remove Favorite methods to update the API data.
+- Updates the current user favorites []
+- Updates the star (favorite) icon in the DOM.
+*/
 async function toggleFavorite(evt) {
   let $favStar = $(evt.target);
   let favoriteStoryID = evt.target.closest('li').id;
@@ -128,28 +152,27 @@ async function toggleFavorite(evt) {
 
 $storiesList.on('click', '.fa-star', toggleFavorite);
 
-//add event listener and method for removing user stories
-async function removeUserStory(evt) {
-  const storyId = evt.target.closest('li').id;
-  console.log(storyId);
-
-  //remove the story
-  await storyList.removeStory(currentUser, storyId);
-
-  hidePageComponents();
-  //show updated stories
-  putStoriesOnPage();
+/* Builds a list of the current user's stories, generates the HTML markup for the list. */
+function putUserStoriesOnPage() {
+  //empty any existing stories
+  $currentUserStoriesList.empty();
+  //if there are no user stories yet, display this message on the page
+  if (currentUser.ownStories.length === 0) {
+    $currentUserStoriesList.append("<p>There are no stories for this user yet.</p>");
+  } else {
+    // loop through all of the user's stories and generate HTML for them
+    for (let story of currentUser.ownStories) {
+      //true is flag to show the delete button
+      const $story = generateStoryMarkup(story, true);
+      $currentUserStoriesList.append($story);
+    }
+  }
 }
 
-$storiesList.on('click', '.fa-trash-alt', removeUserStory);
-
-/* Shows the current list of favorite stories for the current logged in user */
-function showUserFavorites(evt) {
-  console.debug("navUserFavorite");
-  //hide other components and empty any user favorites
-  hidePageComponents();
+/* Builds a list of the current user's favorite stories, generates the HTML markup for the list. */
+function putFavoritesListOnPage() {
+  //empty any existing favorites lists
   $currentUserFavoritesList.empty();
-
   //if there are no user favorites yet, display message
   if (currentUser.favorites.length === 0) {
     $currentUserFavoritesList.append("<p>There are no favorites for this user yet.</p>");
@@ -160,29 +183,4 @@ function showUserFavorites(evt) {
       $currentUserFavoritesList.append($story);
     }
   }
-  $currentUserFavoritesList.show();
 }
-
-$navUserFavorite.on('click', showUserFavorites);
-
-/* Shows the current list of authored stories for the current logged in user */
-function showUserStories(evt) {
-  console.debug("navUserStories");
-  //hide other components and empty any user stories
-  hidePageComponents();
-  $currentUserStoriesList.empty();
-
-    //if there are no user stories yet, display message
-  if (currentUser.ownStories.length === 0) {
-    $currentUserStoriesList.append("<p>There are no stories for this user yet.</p>");
-  } else {
-    // loop through all of the user's stories and generate HTML for them
-    for (let story of currentUser.ownStories) {
-      const $story = generateStoryMarkup(story, true);
-      $currentUserStoriesList.append($story);
-    }
-  }
-  $currentUserStoriesList.show();
-}
-
-$navUserStories.on('click', showUserStories);

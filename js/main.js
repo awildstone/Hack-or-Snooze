@@ -44,13 +44,16 @@ function hidePageComponents() {
 
 async function start() {
   console.debug("start");
+  try {
+    // "Remember logged-in user" and log in, if credentials in localStorage
+    await checkForRememberedUser();
+    await getAndShowStoriesOnStart();
 
-  // "Remember logged-in user" and log in, if credentials in localStorage
-  await checkForRememberedUser();
-  await getAndShowStoriesOnStart();
-
-  // if we got a logged-in user
-  if (currentUser) updateUIOnUserLogin();
+    // if we got a logged-in user
+    if (currentUser) updateUIOnUserLogin();
+  } catch (err) {
+    alert(`${err}. There was a problem loading the application`);
+  }
 }
 
 // Once the DOM is entirely loaded, begin the app

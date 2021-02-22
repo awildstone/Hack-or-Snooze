@@ -32,7 +32,10 @@ function updateNavOnLogin() {
   $navSubmit.show();
   $navUserFavorite.show();
   $navUserStories.show();
-  $navUserProfile.text(`${currentUser.username}`).show();
+  
+  if (currentUser.username !== null) {
+    $navUserProfile.text(`${currentUser.username}`).show();
+  }
 }
 
 /* Handler for the "submit" link. Show the form to submit a new story. */

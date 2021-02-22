@@ -59,12 +59,15 @@ class StoryList {
       url: `${BASE_URL}/stories`,
       method: "GET",
     });
+    if (response.status === 200) {
+      // turn plain old story objects from API into instances of Story class
+      const stories = response.data.stories.map(story => new Story(story));
 
-    // turn plain old story objects from API into instances of Story class
-    const stories = response.data.stories.map(story => new Story(story));
-
-    // build an instance of our own class using the new array of stories
-    return new StoryList(stories);
+      // build an instance of our own class using the new array of stories
+      return new StoryList(stories);
+    } else {
+      throw (`The request to get stories failed: ${story}`);
+    }
   }
 
   /** Adds story data to API, makes a Story instance, adds it to story list.
@@ -80,10 +83,10 @@ class StoryList {
       'story': {
         'author': newStory.author,
         'title': newStory.title,
-        'url': newStory.url
+          'url': newStory.url
       }
     });
-
+      
     //create new Story instance
     const newStoryInstance = new Story(res.data.story);
     console.debug(newStoryInstance);
@@ -106,7 +109,7 @@ class StoryList {
     const res = await axios.delete(`${BASE_URL}/stories/${storyId}`, {params: { token }});
     console.debug(res.data.message);
 
-    //if the API call is successful, remove the story from stories []
+    //remove the story from stories
     this.stories = this.stories.filter(s => s.storyId !== storyId);
 
     //remove the story from the current user stories[] and favorites[]
@@ -154,23 +157,29 @@ class User {
    */
 
   static async signup(username, password, name) {
-    const response = await axios({
-      url: `${BASE_URL}/signup`,
-      method: "POST",
-      data: { user: { username, password, name } },
-    });
+    // try {
+      const response = await axios({
+        url: `${BASE_URL}/signup`,
+        method: "POST",
+        data: { user: { username, password, name } },
+      });
 
-    return new User(
-      {
-        username: user.username,
-        name: user.name,
-        createdAt: user.createdAt,
-        favorites: user.favorites,
-        ownStories: user.stories
-      },
-      response.data.token
-    );
+      return new User(
+        {
+          username: user.username,
+          name: user.name,
+          createdAt: user.createdAt,
+          favorites: user.favorites,
+          ownStories: user.stories
+        },
+        response.data.token
+      );
+    // } catch(err) {
+      // alert(`${err}. Signing up this user failed. Please try again.`);
+      // return null;
+    // }
   }
+  
 
   /** Login in user with API, make User instance & return it.
 
@@ -179,24 +188,28 @@ class User {
    */
 
   static async login(username, password) {
-    const response = await axios({
-      url: `${BASE_URL}/login`,
-      method: "POST",
-      data: { user: { username, password } },
-    });
+    // try {
+      const response = await axios({
+        url: `${BASE_URL}/login`,
+        method: "POST",
+        data: { user: { username, password } },
+      });
 
-    let { user } = response.data;
+      let { user } = response.data;
 
-    return new User(
-      {
-        username: user.username,
-        name: user.name,
-        createdAt: user.createdAt,
-        favorites: user.favorites,
-        ownStories: user.stories
-      },
-      response.data.token
-    );
+      return new User(
+        {
+          username: user.username,
+          name: user.name,
+          createdAt: user.createdAt,
+          favorites: user.favorites,
+          ownStories: user.stories
+        },
+        response.data.token
+      );
+    // } catch(err) {
+      // alert(`${err}: Your login is not authorized, please check your username and password.`);
+    // }
   }
 
   /** When we already have credentials (token & username) for a user,
@@ -224,8 +237,7 @@ class User {
         token
       );
     } catch (err) {
-      console.error("loginViaStoredCredentials failed", err);
-      return null;
+      console.warn(`Login with stored credentials failed: ${err}`);
     }
   }
 
@@ -234,18 +246,22 @@ class User {
    * * If the request fails, an error is thrown.
    */
   async addFavoriteStory(story) {
-    //add this story to user API of thisuser favorites
-    //successfull response should return a user obj with array of updated favorites
-    const res = await axios.post(`${BASE_URL}/users/${this.username}/favorites/${story.storyId}`, 
-    {'token': this.loginToken});
-    console.debug(res.data.message);
-    const requestStatus = res.status;
-    //if API call doesn't fail add this current user favorite []
-     if (requestStatus === 200) {
-      this.favorites.push(story);
-     } else {
-       console.warn('The request to add Favorite FAILED', story);
-     }
+    // try {
+      //add this story to user API of thisuser favorites
+      //successfull response should return a user obj with array of updated favorites
+      const res = await axios.post(`${BASE_URL}/users/${this.username}/favorites/${story.storyId}`, 
+      {'token': this.loginToken});
+      console.debug(res.data.message);
+      const requestStatus = res.status;
+      //if API call doesn't fail add this current user favorite []
+      // if (requestStatus === 200) {
+        this.favorites.push(story);
+      // } else {
+        // throw new Error('The request to add Favorite FAILED', story);
+      // }
+    // } catch (err) {
+      // console.warn(err);
+    // }
   }
 
    /** removeFavoriteStory sends a delete request to the API to delete the current user's favorite story.
@@ -253,26 +269,30 @@ class User {
    * If the request fails, an error is thrown.
    */
   async removeFavoriteStory(story) {
-    //send delete request to delete this user favorite
-    //successfull response should return a user obj with array of updated favorites
-    const token = this.loginToken;
-    const res = await axios.delete(`${BASE_URL}/users/${this.username}/favorites/${story.storyId}`, {params: { token }});
-    console.debug(res.data.message);
-    const requestStatus = res.status;
-    //saving the response - I might want to return something from the User Obj
-    //if API call doesn't fail
-     //update our favorites[] with all favorites that do not match the favorite to remove
-     if (requestStatus === 200) {
-      this.favorites = this.favorites.filter(s => s.storyId !== story.storyId);
-     } else {
-       console.warn('The request to delete Favorite FAILED', story);
-     }
+    // try {
+      //send delete request to delete this user favorite
+      //successfull response should return a user obj with array of updated favorites
+      const token = this.loginToken;
+      const res = await axios.delete(`${BASE_URL}/users/${this.username}/favorites/${story.storyId}`, {params: { token }});
+      console.debug(res.data.message);
+      const requestStatus = res.status;
+      //saving the response - I might want to return something from the User Obj
+      //if API call doesn't fail
+      //update our favorites[] with all favorites that do not match the favorite to remove
+      // if (requestStatus === 200) {
+        this.favorites = this.favorites.filter(s => s.storyId !== story.storyId);
+      // } else {
+        // throw new Error('The request to delete Favorite FAILED', story);
+      // }
+    // } catch (err) {
+      // console.warn(err);
+    // }
   }
 
   /* isFavoriteStory checks the current user favorites[] for the storyId and returns true or false if the story is in the current favorites [] */
   isFavoriteStory(storyId) {
     const isFavorite = this.favorites.some(s => s.storyId === storyId);
-    // console.log(`Curr Story: ${storyId}, in favorites? ${isFavorite}`);
+    
     return isFavorite;
   }
 

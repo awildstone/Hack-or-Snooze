@@ -16,15 +16,17 @@ async function login(evt) {
   // grab the username and password
   const username = $("#login-username").val();
   const password = $("#login-password").val();
+  try {
+    // User.login retrieves user info from API and returns User instance
+    // which we'll make the globally-available, logged-in user.
+    currentUser = await User.login(username, password);
 
-  // User.login retrieves user info from API and returns User instance
-  // which we'll make the globally-available, logged-in user.
-  currentUser = await User.login(username, password);
-
+    saveUserCredentialsInLocalStorage();
+    updateUIOnUserLogin();
+  } catch (err) {
+    alert(`${err}: Your login is not authorized, please check your username and password.`);
+  }
   $loginForm.trigger("reset");
-
-  saveUserCredentialsInLocalStorage();
-  updateUIOnUserLogin();
 }
 
 $loginForm.on("submit", login);
@@ -38,14 +40,19 @@ async function signup(evt) {
   const name = $("#signup-name").val();
   const username = $("#signup-username").val();
   const password = $("#signup-password").val();
+  try {
+    // User.signup retrieves user info from API and returns User instance
+    // which we'll make the globally-available, logged-in user.
+    currentUser = await User.signup(username, password, name);
+    saveUserCredentialsInLocalStorage();
+    // updateUIOnUserLogin();
+    console.log(currentUser);
+    console.log(`User, ${currentUser.username}, created! Please log in.`);
 
-  // User.signup retrieves user info from API and returns User instance
-  // which we'll make the globally-available, logged-in user.
-  currentUser = await User.signup(username, password, name);
-
-  saveUserCredentialsInLocalStorage();
-  updateUIOnUserLogin();
-
+  } catch (err) {
+    //if the signup fails, notify the user.
+    alert(`${err}. This username is already taken. Please try again.`);
+  }
   $signupForm.trigger("reset");
 }
 
@@ -78,8 +85,12 @@ async function checkForRememberedUser() {
   const username = localStorage.getItem("username");
   if (!token || !username) return false;
 
-  // try to log in with these credentials (will be null if login failed)
-  currentUser = await User.loginViaStoredCredentials(token, username);
+  try {
+    // try to log in with these credentials (will be null if login failed)
+    currentUser = await User.loginViaStoredCredentials(token, username);
+  } catch (err) {
+    console.warn(err);
+  }
 }
 
 /** Sync current user information to localStorage.

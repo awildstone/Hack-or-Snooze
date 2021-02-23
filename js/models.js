@@ -156,24 +156,15 @@ class User {
    * - name: the user's full name
    */
 
-  static async signup(username, password, name) {
+  static async signup(name, username, password) {
     // try {
       const response = await axios({
         url: `${BASE_URL}/signup`,
         method: "POST",
-        data: { user: { username, password, name } },
+        data: { user: { name, username, password } },
       });
 
-      return new User(
-        {
-          username: user.username,
-          name: user.name,
-          createdAt: user.createdAt,
-          favorites: user.favorites,
-          ownStories: user.stories
-        },
-        response.data.token
-      );
+      return new User(response.data.user, response.data.token);
     // } catch(err) {
       // alert(`${err}. Signing up this user failed. Please try again.`);
       // return null;

@@ -43,11 +43,10 @@ async function signup(evt) {
   try {
     // User.signup retrieves user info from API and returns User instance
     // which we'll make the globally-available, logged-in user.
-    currentUser = await User.signup(username, password, name);
+    currentUser = await User.signup(name, username, password);
     saveUserCredentialsInLocalStorage();
-    // updateUIOnUserLogin();
-    console.log(currentUser);
-    console.log(`User, ${currentUser.username}, created! Please log in.`);
+    updateUIOnUserLogin();
+    console.log(`User, ${currentUser.username}, created successfully.`);
 
   } catch (err) {
     //if the signup fails, notify the user.

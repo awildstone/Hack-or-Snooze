@@ -24,7 +24,7 @@ async function login(evt) {
     saveUserCredentialsInLocalStorage();
     updateUIOnUserLogin();
   } catch (err) {
-    alert(`${err}: Your login is not authorized, please check your username and password.`);
+    alert(`Your login is not authorized, please check your username and password: ${err}`);
   }
   $loginForm.trigger("reset");
 }
@@ -50,7 +50,7 @@ async function signup(evt) {
 
   } catch (err) {
     //if the signup fails, notify the user.
-    alert(`${err}. This username is already taken. Please try again.`);
+    alert(`This username is already taken. Please try again: ${err}`);
   }
   $signupForm.trigger("reset");
 }
@@ -88,7 +88,7 @@ async function checkForRememberedUser() {
     // try to log in with these credentials (will be null if login failed)
     currentUser = await User.loginViaStoredCredentials(token, username);
   } catch (err) {
-    console.warn(err);
+    alert(`There was a problem logging in with the stored user credentials: ${err}`);
   }
 }
 

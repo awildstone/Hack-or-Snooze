@@ -6,10 +6,13 @@ let storyList;
 /** Get and show stories when site first loads. */
 
 async function getAndShowStoriesOnStart() {
-  storyList = await StoryList.getStories();
-  $storiesLoadingMsg.remove();
-
-  putStoriesOnPage();
+  try {
+    storyList = await StoryList.getStories();
+    $storiesLoadingMsg.remove();
+    putStoriesOnPage();
+  } catch(err) {
+    alert(`There was a problem getting the stories from the server: ${err}`)
+  }
 }
 
 /**
@@ -25,7 +28,6 @@ function generateStoryMarkup(story, showDeleteBtn = false) {
   const deleteButton = '<i class="fas fa-trash-alt"></i>'
   //if there is a logged in user, show the favorites star
   const userLoggedIn = Boolean(currentUser);
-
   const hostName = story.getHostName();
   return $(`
       <li id="${story.storyId}">
@@ -55,8 +57,6 @@ function chooseStarType(currentUser, story) {
     } else {
       return notFavoriteStar;
     }
-  } else { //can probably delete this
-    return null;
   }
 }
 
@@ -89,19 +89,22 @@ async function submitNewStory(evt) {
   let $author = $('#author-name').val();
   let $title = $('#story-title').val();
   let $url = $('#story-url').val();
+  try {
+    //add the Story
+    await storyList.addStory(currentUser, {title: $title, author: $author, url: $url});
 
-  //add the Story
-  await storyList.addStory(currentUser, {title: $title, author: $author, url: $url});
+    //clear input values
+    $('#author-name').val('');
+    $('#story-title').val('');
+    $('#story-url').val('');
 
-  //clear input values
-  $('#author-name').val('');
-  $('#story-title').val('');
-  $('#story-url').val('');
-
-  //hide form
-  $storySubmitForm.hide();
-  //show updated stories
-  putStoriesOnPage();
+    //hide form
+    $storySubmitForm.hide();
+    //show updated stories
+    putStoriesOnPage();
+  } catch(err) {
+    alert(`There was a problem submitting the new story: ${err}`);
+  }
 }
 
 $storySubmitForm.on('submit', submitNewStory);
@@ -114,13 +117,16 @@ $storySubmitForm.on('submit', submitNewStory);
 async function removeUserStory(evt) {
   const storyId = evt.target.closest('li').id;
   console.log(storyId);
+  try {
+    //remove the story
+    await storyList.removeStory(currentUser, storyId);
 
-  //remove the story
-  await storyList.removeStory(currentUser, storyId);
-
-  //show updated stories
-  hidePageComponents();
-  putStoriesOnPage();
+    //show updated stories
+    hidePageComponents();
+    putStoriesOnPage();
+  } catch(err) {
+    alert(`There was a problem removing the new story: ${err}`);
+  }
 }
 
 $storiesList.on('click', '.fa-trash-alt', removeUserStory);
@@ -138,15 +144,23 @@ async function toggleFavorite(evt) {
 
   //check if this story id is already favorited by current user
   if (!(currentUser.isFavoriteStory(favoriteStoryID))) {
-    //if the story is not in the current user favorites[], add favorite to API and user favorites[]
-    await currentUser.addFavoriteStory(story);
-    //update favorite star in DOM
-    $favStar.attr('class', 'fas fa-star');
+    try {
+      //if the story is not in the current user favorites[], add favorite to API and user favorites[]
+      await currentUser.addFavoriteStory(story);
+      //update favorite star in DOM
+      $favStar.attr('class', 'fas fa-star');
+    } catch(err) {
+      alert(`There was a problem adding this favorite: ${err}`)
+    }
   } else {
-    //if the story is in the current user favorites[], remove favorite from API and user favorites[]
-    await currentUser.removeFavoriteStory(story);
-    //update favorite star in DOM
-    $favStar.attr('class','far fa-star');
+    try {
+      //if the story is in the current user favorites[], remove favorite from API and user favorites[]
+      await currentUser.removeFavoriteStory(story);
+      //update favorite star in DOM
+      $favStar.attr('class','far fa-star');
+    } catch(err) {
+      alert(`There was a problem removing this favorite: ${err}`)
+    }
   }
 }
 

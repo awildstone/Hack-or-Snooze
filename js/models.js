@@ -101,7 +101,7 @@ class StoryList {
 
       return newStoryInstance;
     } catch(err) {
-      console.alert(`Adding a new story failed: ${err}`);
+      console.warn(`Adding a new story failed: ${err}`);
     }
   }
 
@@ -123,7 +123,7 @@ class StoryList {
       user.ownStories = user.ownStories.filter(s => s.storyId !== storyId);
       user.favorites = user.favorites.filter(s => s.storyId !== storyId);
     } catch(err) {
-      console.alert(`Removing the story failed: ${err}`);
+      console.warn(`Removing the story failed: ${err}`);
     }
   }
 }
@@ -176,7 +176,7 @@ class User {
 
       return new User(response.data.user, response.data.token);
     } catch(err) {
-      console.alert(`Signing up the new user failed: ${err}`);
+      console.warn(`Signing up the new user failed: ${err}`);
     }
   }
   
@@ -208,7 +208,7 @@ class User {
         response.data.token
       );
     } catch(err) {
-      console.alert(`Login failed: ${err}`);
+      console.warn(`Login failed: ${err}`);
     }
   }
 
@@ -254,7 +254,7 @@ class User {
       console.debug(res.data.message);
       this.favorites.push(story);
     } catch (err) {
-      console.alert(`Adding this favorite failed: ${err}`);
+      console.warn(`Adding this favorite failed: ${err}`);
     }
   }
 
@@ -272,7 +272,7 @@ class User {
       //update our favorites[] with all favorites that do not match the favorite to remove
         this.favorites = this.favorites.filter(s => s.storyId !== story.storyId);
     } catch (err) {
-      console.alert(`Removing this favorite failed: ${err}`);
+      console.warn(`Removing this favorite failed: ${err}`);
     }
   }
 

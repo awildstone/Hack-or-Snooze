@@ -52,7 +52,7 @@ async function start() {
     // if we got a logged-in user
     if (currentUser) updateUIOnUserLogin();
   } catch (err) {
-    alert(`${err}. There was a problem loading the application`);
+    alert(`There was a problem loading the application: ${err}.`);
   }
 }
 

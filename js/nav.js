@@ -26,12 +26,12 @@ $navLogin.on("click", navLoginClick);
 /** When a user first logins in, update the navbar to reflect that. */
 function updateNavOnLogin() {
   console.debug("updateNavOnLogin");
-  $(".main-nav-links").show();
+  // $(".main-nav-links").show(); //doesn't do anything. I should add this class to my links I want to show
   $navLogin.hide();
   $navLogOut.show();
-  $navSubmit.show();
-  $navUserFavorite.show();
-  $navUserStories.show();
+  $navSubmit.show(); //could add .main-nav-links to html element and remove this
+  $navUserFavorite.show(); //could add .main-nav-links to html element and remove this
+  $navUserStories.show(); //could add .main-nav-links to html element and remove this
   
   if (currentUser.username !== null) {
     $navUserProfile.text(`${currentUser.username}`).show();

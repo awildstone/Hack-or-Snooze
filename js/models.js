@@ -55,18 +55,20 @@ class StoryList {
     //We would only want one shared instance of the StoryList accessible from the StoryList Class. If each instance of a Story had its own list of stories, other Story instances would not be aware of those other StoryList instances or any changes to those instances. Other objects that interact with StoryList like users could not share the same StoryList instance if we allowed multiple instances.
 
     // query the /stories endpoint (no auth required)
-    const response = await axios({
-      url: `${BASE_URL}/stories`,
-      method: "GET",
-    });
-    if (response.status === 200) {
+    //wrap the calls in try/catch
+    try {
+      const response = await axios({
+        url: `${BASE_URL}/stories`,
+        method: "GET",
+      });
+    
       // turn plain old story objects from API into instances of Story class
       const stories = response.data.stories.map(story => new Story(story));
 
       // build an instance of our own class using the new array of stories
       return new StoryList(stories);
-    } else {
-      throw (`The request to get stories failed: ${story}`);
+    } catch (err) {
+      console.warn(`Getting the list of stories failed: ${err}`);
     }
   }
 
@@ -77,26 +79,30 @@ class StoryList {
    * Returns the new Story instance
    */
   async addStory(user, newStory) {
-    //post new story to API, save API response
-    const res = await axios.post(`${BASE_URL}/stories`, {
-      'token': user.loginToken,
-      'story': {
-        'author': newStory.author,
-        'title': newStory.title,
-          'url': newStory.url
-      }
-    });
-      
-    //create new Story instance
-    const newStoryInstance = new Story(res.data.story);
-    console.debug(newStoryInstance);
+    try {
+      //post new story to API, save API response
+      const res = await axios.post(`${BASE_URL}/stories`, {
+        'token': user.loginToken,
+        'story': {
+          'author': newStory.author,
+          'title': newStory.title,
+            'url': newStory.url
+        }
+      });
+        
+      //create new Story instance
+      const newStoryInstance = new Story(res.data.story);
+      console.debug(newStoryInstance);
 
-    //add new Story to our StoryList
-    this.stories.unshift(newStoryInstance);
-    //update current user's storylist
-    user.ownStories.unshift(newStoryInstance);
+      //add new Story to our StoryList
+      this.stories.unshift(newStoryInstance);
+      //update current user's storylist
+      user.ownStories.unshift(newStoryInstance);
 
-    return newStoryInstance;
+      return newStoryInstance;
+    } catch(err) {
+      console.alert(`Adding a new story failed: ${err}`);
+    }
   }
 
     /** Removes a user's story from the API and memory arrays for the current user.
@@ -104,17 +110,21 @@ class StoryList {
    * storyId - the current user's story to remove.
    */
   async removeStory(user, storyId) {
-    //send delete request to API, save API response
-    const token = user.loginToken;
-    const res = await axios.delete(`${BASE_URL}/stories/${storyId}`, {params: { token }});
-    console.debug(res.data.message);
+    try {
+      //send delete request to API, save API response
+      const token = user.loginToken;
+      const res = await axios.delete(`${BASE_URL}/stories/${storyId}`, {params: { token }});
+      console.debug(res.data.message);
 
-    //remove the story from stories
-    this.stories = this.stories.filter(s => s.storyId !== storyId);
+      //remove the story from stories
+      this.stories = this.stories.filter(s => s.storyId !== storyId);
 
-    //remove the story from the current user stories[] and favorites[]
-    user.ownStories = user.ownStories.filter(s => s.storyId !== storyId);
-    user.favorites = user.favorites.filter(s => s.storyId !== storyId);
+      //remove the story from the current user stories[] and favorites[]
+      user.ownStories = user.ownStories.filter(s => s.storyId !== storyId);
+      user.favorites = user.favorites.filter(s => s.storyId !== storyId);
+    } catch(err) {
+      console.alert(`Removing the story failed: ${err}`);
+    }
   }
 }
 
@@ -157,7 +167,7 @@ class User {
    */
 
   static async signup(name, username, password) {
-    // try {
+    try {
       const response = await axios({
         url: `${BASE_URL}/signup`,
         method: "POST",
@@ -165,10 +175,9 @@ class User {
       });
 
       return new User(response.data.user, response.data.token);
-    // } catch(err) {
-      // alert(`${err}. Signing up this user failed. Please try again.`);
-      // return null;
-    // }
+    } catch(err) {
+      console.alert(`Signing up the new user failed: ${err}`);
+    }
   }
   
 
@@ -179,7 +188,7 @@ class User {
    */
 
   static async login(username, password) {
-    // try {
+    try {
       const response = await axios({
         url: `${BASE_URL}/login`,
         method: "POST",
@@ -198,9 +207,9 @@ class User {
         },
         response.data.token
       );
-    // } catch(err) {
-      // alert(`${err}: Your login is not authorized, please check your username and password.`);
-    // }
+    } catch(err) {
+      console.alert(`Login failed: ${err}`);
+    }
   }
 
   /** When we already have credentials (token & username) for a user,
@@ -237,22 +246,16 @@ class User {
    * * If the request fails, an error is thrown.
    */
   async addFavoriteStory(story) {
-    // try {
+    try {
       //add this story to user API of thisuser favorites
       //successfull response should return a user obj with array of updated favorites
       const res = await axios.post(`${BASE_URL}/users/${this.username}/favorites/${story.storyId}`, 
       {'token': this.loginToken});
       console.debug(res.data.message);
-      const requestStatus = res.status;
-      //if API call doesn't fail add this current user favorite []
-      // if (requestStatus === 200) {
-        this.favorites.push(story);
-      // } else {
-        // throw new Error('The request to add Favorite FAILED', story);
-      // }
-    // } catch (err) {
-      // console.warn(err);
-    // }
+      this.favorites.push(story);
+    } catch (err) {
+      console.alert(`Adding this favorite failed: ${err}`);
+    }
   }
 
    /** removeFavoriteStory sends a delete request to the API to delete the current user's favorite story.
@@ -260,24 +263,17 @@ class User {
    * If the request fails, an error is thrown.
    */
   async removeFavoriteStory(story) {
-    // try {
+    try {
       //send delete request to delete this user favorite
       //successfull response should return a user obj with array of updated favorites
       const token = this.loginToken;
       const res = await axios.delete(`${BASE_URL}/users/${this.username}/favorites/${story.storyId}`, {params: { token }});
       console.debug(res.data.message);
-      const requestStatus = res.status;
-      //saving the response - I might want to return something from the User Obj
-      //if API call doesn't fail
       //update our favorites[] with all favorites that do not match the favorite to remove
-      // if (requestStatus === 200) {
         this.favorites = this.favorites.filter(s => s.storyId !== story.storyId);
-      // } else {
-        // throw new Error('The request to delete Favorite FAILED', story);
-      // }
-    // } catch (err) {
-      // console.warn(err);
-    // }
+    } catch (err) {
+      console.alert(`Removing this favorite failed: ${err}`);
+    }
   }
 
   /* isFavoriteStory checks the current user favorites[] for the storyId and returns true or false if the story is in the current favorites [] */

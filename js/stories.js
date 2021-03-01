@@ -55,7 +55,7 @@ function chooseStarType(currentUser, story) {
     } else {
       return notFavoriteStar;
     }
-  } else {
+  } else { //can probably delete this
     return null;
   }
 }
